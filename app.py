@@ -109,7 +109,7 @@ Please answer with the comic ID, URL (https://xkcd.com/ID/) and a short explanat
     yield out.strip() or "Sorry, I couldn't parse the model response."
 
 # --- UI ---
-with gr.Blocks() as demo:
+with gr.Blocks(theme='gstaff/xkcd') as demo:
     gr.Markdown("# xkcd Comic Finder")
     gr.Markdown(
         "Sign in with your Hugging Face account so the app can call the model via the Inference API."
@@ -127,7 +127,6 @@ with gr.Blocks() as demo:
             "Life advice in comic form.",
         ],
         type="messages",
-        theme='gstaff/xkcd',
     )
 
 if __name__ == "__main__":
