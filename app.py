@@ -63,8 +63,7 @@ def respond(
     oauth: gr.OAuthToken | None = None,  # Gradio injects this when available
 ):
     if not oauth:
-        yield "⚠️ Please sign in with your Hugging Face account (top of the page)"
-        return
+        return "⚠️ Please sign in with your Hugging Face account (top of the page)"
     token = oauth.token
 
     # Embed the query and search FAISS
@@ -81,7 +80,11 @@ Here are candidate xkcd comics:
 {context}
 
 Which comic fits best and why?
-Please answer with the comic ID, URL (https://xkcd.com/ID/) and a short explanation.
+Please answer with the comic ID, URL (https://xkcd.com/ID/) and a short explanation in the format:
+
+[ID] URL
+
+EXPLANATION
 """
 
     print("[PROMPT] " + prompt)
@@ -106,7 +109,25 @@ Please answer with the comic ID, URL (https://xkcd.com/ID/) and a short explanat
     except Exception:
         out = str(resp)
 
-    yield out.strip() or "Sorry, I couldn't parse the model response."
+    out_text = out.strip() or "Sorry, I couldn't parse the model response."
+
+    if out_text != "Sorry, I couldn't parse the model response.":
+        try:
+            id_start = out_text.index("[") +1
+            id_end = out_text.index("]")
+            id = out_text[id_start:id_end]
+            print(f'Read ID: {id}')
+            
+            import urllib.request, json
+            with urllib.request.urlopen(f'https://xkcd.com/{id}/info.0.json') as url:
+                img_url = json.load(url)["img"]
+                print(f'Got image url: {img_url}')
+            
+            return [out_text, gr.Image(value=img_url)]
+        except ValueError:
+            print("Couldn't parse xkcd ID or get image! That should not happen.")
+    
+    return out_text
 
 # --- UI ---
 with gr.Blocks(theme='gstaff/xkcd') as demo:
