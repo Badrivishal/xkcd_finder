@@ -1,6 +1,6 @@
 ---
-title: XKCD Finder
-emoji: 💬
+title: xkcd Finder
+emoji: 🦙
 colorFrom: yellow
 colorTo: purple
 sdk: gradio

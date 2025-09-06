@@ -20,11 +20,10 @@ def build_index():
     model = SentenceTransformer("all-MiniLM-L6-v2")
     texts = []
     for ex in ds:
-        id_ = str(ex["id"]) if ex["id"] else ""
         title = ex["title"] if ex["title"] else ""
         transcript = ex["transcript"] if ex["transcript"] else ""
         explanation = ex["explanation"] if "explanation" in ex and ex["explanation"] else ""
-        texts.append(f"{id_} {title} {transcript} {explanation}")
+        texts.append(f"{title} {transcript} {explanation}")
 
     embeddings = model.encode(texts, convert_to_numpy=True, show_progress_bar=True)
     dim = embeddings.shape[1]
@@ -93,7 +92,7 @@ Please answer with the comic ID, URL (https://xkcd.com/ID/) and a short explanat
             {"role": "user", "content": prompt},
         ],
         max_tokens=200,
-        temperature=0.0,
+        temperature=0.0, # TODO
     )
 
     # Be tolerant to slight schema differences
@@ -127,6 +126,8 @@ with gr.Blocks() as demo:
             "A comic for programmers debugging code.",
             "Life advice in comic form.",
         ],
+        type="messages",
+        theme='gstaff/xkcd',
     )
 
 if __name__ == "__main__":
