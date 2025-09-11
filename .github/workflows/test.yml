@@ -27,7 +27,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. But the test has failed :sad: Github Actions are fun!\ \n Test results: ${{ steps.test.outcome }}\"}" \
+          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. But the test has failed :sad: Github Actions are fun!\\n Test results: ${{ steps.test.outcome }}\"}" \
           $DISCORD_WEBHOOK_URL 
       
       - name: Send test results to Discord
@@ -36,5 +36,5 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. Tests have passed! :smile: Github Actions are fun!\ \n Test results: ${{ steps.test.outcome }}\"}" \
+          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. Tests have passed! :smile: Github Actions are fun!\\n Test results: ${{ steps.test.outcome }}\"}" \
           $DISCORD_WEBHOOK_URL 
