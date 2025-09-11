@@ -46,15 +46,18 @@ def build_index():
 
     return index, meta
 
-if os.path.exists(INDEX_FILE) and os.path.exists(META_FILE):
-    print("Loading cached index...")
-    index = faiss.read_index(INDEX_FILE)
-    with open(META_FILE, "rb") as f:
-        meta = pickle.load(f)
-else:
-    index, meta = build_index()
-
-embedder = SentenceTransformer("all-MiniLM-L6-v2")
+def get_index():
+    if os.path.exists(INDEX_FILE) and os.path.exists(META_FILE):
+        print("Loading cached index...")
+        with open(META_FILE, "rb") as f:
+            return faiss.read_index(INDEX_FILE), pickle.load(f)
+    else:
+        return build_index()
+    
+def get_id_from_string(str:str) -> str:
+    id_start = str.index("[") +1
+    id_end = str.index("]")
+    return str[id_start:id_end]
 
 # --- Chat handler ---
 def respond(
@@ -113,9 +116,7 @@ EXPLANATION
 
     if out_text != "Sorry, I couldn't parse the model response.":
         try:
-            id_start = out_text.index("[") +1
-            id_end = out_text.index("]")
-            id = out_text[id_start:id_end]
+            id = get_id_from_string(out_text)
             print(f'Read ID: {id}')
             
             import urllib.request, json
@@ -151,4 +152,8 @@ with gr.Blocks(theme='gstaff/xkcd') as demo:
     )
 
 if __name__ == "__main__":
+    global index
+    global meta 
+    index, meta = get_index()
+    embedder = SentenceTransformer("all-MiniLM-L6-v2")
     demo.launch()
