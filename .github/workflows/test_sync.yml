@@ -1,4 +1,5 @@
-name: Test Code
+name: Test & Sync
+
 on:
   push:
     branches: 
@@ -15,32 +16,49 @@ jobs:
         with:
           fetch-depth: 0
           lfs: true
+
       - uses: actions/setup-python@v5
         with:
           python-version: 3.11.5
+
       - name: Install dependencies
         run: pip install pytest
+
       - name: Test code
         id: test
         continue-on-error: true
         run: pytest
 
-      - name: Send test results to Discord
+      - name: Send test results to Discord (failed)
         if: steps.test.outcome != 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
           -d "{\"content\": \"A new commit $GITHUB_SHA was pushed to $GITHUB_REF_NAME by $GITHUB_ACTOR. But the test has failed :sad:\"}" \
-          $DISCORD_WEBHOOK_URL 
+          $DISCORD_WEBHOOK_URL
           exit 1
       
-      - name: Send test results to Discord
+      - name: Send test results to Discord (success)
         if: steps.test.outcome == 'success'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
           -d "{\"content\": \"A new commit $GITHUB_SHA was pushed to $GITHUB_REF_NAME by $GITHUB_ACTOR. Tests have passed! :smile:\"}" \
-          $DISCORD_WEBHOOK_URL 
+          $DISCORD_WEBHOOK_URL
           exit 0
+
+  deploy:
+    needs: test-code
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Push to hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: git push https://bapaurana:$HF_TOKEN@huggingface.co/spaces/bapaurana/xkcd_finder main
