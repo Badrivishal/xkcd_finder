@@ -1,7 +1,11 @@
-name: Test code
+name: Test Code
 on:
   push:
-    branches: [test]
+    branches: 
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   test-code:
@@ -27,7 +31,7 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. But the test has failed :sad: Github Actions are fun!\\n Test results: ${{ steps.test.outcome }}\"}" \
+          -d "{\"content\": \"A new commit $GITHUB_SHA was pushed to $GITHUB_REF_NAME by $GITHUB_ACTOR. But the test has failed :sad:\"}" \
           $DISCORD_WEBHOOK_URL 
           exit 1
       
@@ -37,6 +41,6 @@ jobs:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: |
           curl -X POST -H "Content-Type: application/json" \
-          -d "{\"content\": \"A new commit was pushed to the test branch by $GITHUB_ACTOR. Tests have passed! :smile: Github Actions are fun!\\n Test results: ${{ steps.test.outcome }}\"}" \
+          -d "{\"content\": \"A new commit $GITHUB_SHA was pushed to $GITHUB_REF_NAME by $GITHUB_ACTOR. Tests have passed! :smile:\"}" \
           $DISCORD_WEBHOOK_URL 
           exit 0
