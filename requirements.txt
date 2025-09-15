@@ -3,3 +3,4 @@ faiss-cpu
 transformers
 sentence-transformers
 datasets
+gradio[oauth]

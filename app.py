@@ -130,30 +130,29 @@ EXPLANATION
     
     return out_text
 
-# --- UI ---
-with gr.Blocks(theme='gstaff/xkcd') as demo:
-    gr.Markdown("# xkcd Comic Finder")
-    gr.Markdown(
-        "Sign in with your Hugging Face account so the app can call the model via the Inference API."
-        "\n\n> If you deploy to a Space, add `hf_oauth: true` in your Space metadata and grant the `inference:api` scope."
-    )
-    gr.LoginButton()  # Shows “Sign in with Hugging Face”
-
-    gr.ChatInterface(
-        fn=respond,
-        title="xkcd Comic Finder",
-        description="Find the most suitable xkcd comic for your situation. Use the login button above.",
-        examples=[
-            "I need a comic about procrastination.",
-            "A comic for programmers debugging code.",
-            "Life advice in comic form.",
-        ],
-        type="messages",
-    )
-
 if __name__ == "__main__":
-    global index
-    global meta 
-    index, meta = get_index()
-    embedder = SentenceTransformer("all-MiniLM-L6-v2")
-    demo.launch()
+    # --- UI ---
+    with gr.Blocks(theme='gstaff/xkcd') as demo:
+        gr.Markdown("# xkcd Comic Finder")
+        gr.Markdown(
+            "Sign in with your Hugging Face account so the app can call the model via the Inference API."
+            "\n\n> If you deploy to a Space, add `hf_oauth: true` in your Space metadata and grant the `inference:api` scope."
+        )
+        gr.LoginButton()  # Shows “Sign in with Hugging Face”
+
+        gr.ChatInterface(
+            fn=respond,
+            title="xkcd Comic Finder",
+            description="Find the most suitable xkcd comic for your situation. Use the login button above.",
+            examples=[
+                "I need a comic about procrastination.",
+                "A comic for programmers debugging code.",
+                "Life advice in comic form.",
+            ],
+            type="messages",
+        )
+        global index
+        global meta 
+        index, meta = get_index()
+        embedder = SentenceTransformer("all-MiniLM-L6-v2")
+        demo.launch()
