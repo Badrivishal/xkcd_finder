@@ -8,6 +8,10 @@ from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
 
+# --- Credit ---
+# Most of this code was generated using AI (ChatGPT, GitHub Copilot). 
+# Please refer to the references of the report for concrete links to the respective AI interactions.
+
 # --- Config ---
 INDEX_FILE = "xkcd.index"
 META_FILE = "meta.pkl"
