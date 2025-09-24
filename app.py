@@ -69,9 +69,13 @@ def respond(
     history: list[dict[str, str]],
     oauth: gr.OAuthToken | None = None,  # Gradio injects this when available
 ):
-    if not oauth:
-        return "⚠️ Please sign in with your Hugging Face account (top of the page)"
-    token = oauth.token
+    token = None
+    if oauth and getattr(oauth, "token", None):
+        token = oauth.token
+    elif os.getenv("HF_TOKEN"):
+        token = os.getenv("HF_TOKEN")
+    else:
+        return "⚠️ Please sign in with your Hugging Face account (top of the page) or set the HF_TOKEN environment variable"
 
     # Embed the query and search FAISS
     query_vec = embedder.encode([message], convert_to_numpy=True)
