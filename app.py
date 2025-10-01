@@ -8,6 +8,10 @@ from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
 
+# --- Credit ---
+# Most of this code was generated using AI (ChatGPT, GitHub Copilot). 
+# Please refer to the references of the report for concrete links to the respective AI interactions.
+
 # --- Config ---
 INDEX_FILE = "xkcd.index"
 META_FILE = "meta.pkl"
@@ -65,9 +69,13 @@ def respond(
     history: list[dict[str, str]],
     oauth: gr.OAuthToken | None = None,  # Gradio injects this when available
 ):
-    if not oauth:
-        return "⚠️ Please sign in with your Hugging Face account (top of the page)"
-    token = oauth.token
+    token = None
+    if oauth and getattr(oauth, "token", None):
+        token = oauth.token
+    elif os.getenv("HF_TOKEN"):
+        token = os.getenv("HF_TOKEN")
+    else:
+        return "⚠️ Please sign in with your Hugging Face account (top of the page) or set the HF_TOKEN environment variable"
 
     # Embed the query and search FAISS
     query_vec = embedder.encode([message], convert_to_numpy=True)
