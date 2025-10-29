@@ -7,7 +7,7 @@ import gradio as gr
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
-
+from prometheus_helper import PrometheusHelper
 # --- Credit ---
 # Most of this code was generated using AI (ChatGPT, GitHub Copilot). 
 # Please refer to the references of the report for concrete links to the respective AI interactions.
@@ -16,6 +16,7 @@ from huggingface_hub import InferenceClient
 INDEX_FILE = "xkcd.index"
 META_FILE = "meta.pkl"
 CHAT_MODEL = os.getenv("CHAT_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+prometheus_helper = PrometheusHelper()
 
 # --- Build / load index ---
 def build_index():
@@ -77,6 +78,7 @@ def respond(
     else:
         return "⚠️ Please sign in with your Hugging Face account (top of the page) or set the HF_TOKEN environment variable"
 
+    prometheus_helper.start_request_timer()
     # Embed the query and search FAISS
     query_vec = embedder.encode([message], convert_to_numpy=True)
     D, I = index.search(query_vec, 5)
@@ -135,11 +137,13 @@ EXPLANATION
             return [out_text, gr.Image(value=img_url)]
         except ValueError:
             print("Couldn't parse xkcd ID or get image! That should not happen.")
-    
+    prometheus_helper.record_request(True)
+    prometheus_helper.stop_request_timer()
     return out_text
 
 if __name__ == "__main__":
     # --- UI ---
+    prometheus_helper.setup_prometheus()
     with gr.Blocks(theme='gstaff/xkcd') as demo:
         gr.Markdown("# xkcd Comic Finder")
         gr.Markdown(
