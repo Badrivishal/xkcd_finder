@@ -1,13 +1,22 @@
 from __future__ import annotations
 
 import os
+import time
 import pickle
 import faiss
 import gradio as gr
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
-from prometheus_helper import PrometheusHelper
+from prometheus_client import start_http_server, Counter, Summary
+
+
+# --- Prometheus metrics ---
+REQUEST_COUNTER       = Counter('app_requests_total',               'Total number of requests')
+SUCCESSFUL_REQUESTS   = Counter('app_successful_requests_total',    'Total number of successful requests')
+FAILED_REQUESTS       = Counter('app_failed_requests_total',        'Total number of failed requests')
+REQUEST_DURATION      = Summary('app_request_duration_seconds',     'Time spent processing request')
+
 # --- Credit ---
 # Most of this code was generated using AI (ChatGPT, GitHub Copilot). 
 # Please refer to the references of the report for concrete links to the respective AI interactions.
@@ -78,7 +87,8 @@ def respond(
     else:
         return "⚠️ Please sign in with your Hugging Face account (top of the page) or set the HF_TOKEN environment variable"
 
-    prometheus_helper.start_request_timer()
+    REQUEST_COUNTER.inc()
+    start_time = time.perf_counter()
     # Embed the query and search FAISS
     query_vec = embedder.encode([message], convert_to_numpy=True)
     D, I = index.search(query_vec, 5)
@@ -133,17 +143,18 @@ EXPLANATION
             with urllib.request.urlopen(f'https://xkcd.com/{id}/info.0.json') as url:
                 img_url = json.load(url)["img"]
                 print(f'Got image url: {img_url}')
-            
+            SUCCESSFUL_REQUESTS.inc()
             return [out_text, gr.Image(value=img_url)]
         except ValueError:
             print("Couldn't parse xkcd ID or get image! That should not happen.")
-    prometheus_helper.record_request(True)
-    prometheus_helper.stop_request_timer()
+            FAILED_REQUESTS.inc()
+        finally:
+            REQUEST_DURATION.observe(time.perf_counter() - start_time)
     return out_text
 
 if __name__ == "__main__":
     # --- UI ---
-    prometheus_helper.setup_prometheus()
+    start_http_server(8000)
     with gr.Blocks(theme='gstaff/xkcd') as demo:
         gr.Markdown("# xkcd Comic Finder")
         gr.Markdown(
