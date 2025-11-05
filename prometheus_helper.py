@@ -1,5 +1,5 @@
 from prometheus_client import start_http_server, Counter, Summary
-
+import time
 
 class PrometheusHelper:
     def __init__(self):
