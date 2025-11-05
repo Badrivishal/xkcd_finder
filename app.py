@@ -25,7 +25,7 @@ REQUEST_DURATION      = Summary('app_request_duration_seconds',     'Time spent 
 INDEX_FILE = "xkcd.index"
 META_FILE = "meta.pkl"
 CHAT_MODEL = os.getenv("CHAT_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
-prometheus_helper = PrometheusHelper()
+# prometheus_helper = PrometheusHelper()
 
 # --- Build / load index ---
 def build_index():
