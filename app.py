@@ -20,6 +20,7 @@ prometheus_helper = PrometheusHelper()
 
 # --- Build / load index ---
 def build_index():
+    prometheus_helper.start_index_build_timer()
     print("Building FAISS index...")
     ds = load_dataset("olivierdehaene/xkcd", split="train")
     model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -49,6 +50,7 @@ def build_index():
     with open(META_FILE, "wb") as f:
         pickle.dump(meta, f)
 
+    prometheus_helper.stop_index_build_timer()
     return index, meta
 
 def get_index():
@@ -80,9 +82,13 @@ def respond(
 
     prometheus_helper.start_request_timer()
     # Embed the query and search FAISS
+    prometheus_helper.start_faiss_index_search_timer()
     query_vec = embedder.encode([message], convert_to_numpy=True)
     D, I = index.search(query_vec, 5)
     candidates = [meta[int(i)] for i in I[0]]
+
+    prometheus_helper.stop_faiss_index_search_timer()
+    prometheus_helper.start_chat_model_call_timer()
 
     context = "\n".join(
         f"[{c['id']}] {c['title']}\nTranscript: {c['transcript']}\nExplanation: {c['explanation']}"
@@ -111,6 +117,8 @@ EXPLANATION
         temperature=0.0, # TODO
     )
 
+    prometheus_helper.stop_chat_model_call_timer()
+
     # Be tolerant to slight schema differences
     try:
         choice = resp.choices[0]
@@ -134,6 +142,7 @@ EXPLANATION
                 img_url = json.load(url)["img"]
                 print(f'Got image url: {img_url}')
             
+            prometheus_helper.record_frequency(int(id))
             return [out_text, gr.Image(value=img_url)]
         except ValueError:
             print("Couldn't parse xkcd ID or get image! That should not happen.")
