@@ -4,3 +4,4 @@ transformers
 sentence-transformers
 datasets
 gradio[oauth]
+prometheus_client==0.16.*

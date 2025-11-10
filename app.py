@@ -7,7 +7,7 @@ import gradio as gr
 from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from huggingface_hub import InferenceClient
-
+from prometheus_helper import PrometheusHelper
 # --- Credit ---
 # Most of this code was generated using AI (ChatGPT, GitHub Copilot). 
 # Please refer to the references of the report for concrete links to the respective AI interactions.
@@ -16,9 +16,11 @@ from huggingface_hub import InferenceClient
 INDEX_FILE = "xkcd.index"
 META_FILE = "meta.pkl"
 CHAT_MODEL = os.getenv("CHAT_MODEL", "meta-llama/Meta-Llama-3-8B-Instruct")
+prometheus_helper = PrometheusHelper()
 
 # --- Build / load index ---
 def build_index():
+    prometheus_helper.start_index_build_timer()
     print("Building FAISS index...")
     ds = load_dataset("olivierdehaene/xkcd", split="train")
     model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -48,6 +50,7 @@ def build_index():
     with open(META_FILE, "wb") as f:
         pickle.dump(meta, f)
 
+    prometheus_helper.stop_index_build_timer()
     return index, meta
 
 def get_index():
@@ -77,10 +80,15 @@ def respond(
     else:
         return "⚠️ Please sign in with your Hugging Face account (top of the page) or set the HF_TOKEN environment variable"
 
+    prometheus_helper.start_request_timer()
     # Embed the query and search FAISS
+    prometheus_helper.start_faiss_index_search_timer()
     query_vec = embedder.encode([message], convert_to_numpy=True)
     D, I = index.search(query_vec, 5)
     candidates = [meta[int(i)] for i in I[0]]
+
+    prometheus_helper.stop_faiss_index_search_timer()
+    prometheus_helper.start_chat_model_call_timer()
 
     context = "\n".join(
         f"[{c['id']}] {c['title']}\nTranscript: {c['transcript']}\nExplanation: {c['explanation']}"
@@ -109,6 +117,8 @@ EXPLANATION
         temperature=0.0, # TODO
     )
 
+    prometheus_helper.stop_chat_model_call_timer()
+
     # Be tolerant to slight schema differences
     try:
         choice = resp.choices[0]
@@ -132,14 +142,17 @@ EXPLANATION
                 img_url = json.load(url)["img"]
                 print(f'Got image url: {img_url}')
             
+            prometheus_helper.record_frequency(int(id))
             return [out_text, gr.Image(value=img_url)]
         except ValueError:
             print("Couldn't parse xkcd ID or get image! That should not happen.")
-    
+    prometheus_helper.record_request(True)
+    prometheus_helper.stop_request_timer()
     return out_text
 
 if __name__ == "__main__":
     # --- UI ---
+    prometheus_helper.setup_prometheus()
     with gr.Blocks(theme='gstaff/xkcd') as demo:
         gr.Markdown("# xkcd Comic Finder")
         gr.Markdown(
