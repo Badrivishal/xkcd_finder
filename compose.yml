@@ -1,0 +1,26 @@
+services:
+  app:
+    container_name: xkcd_finder_app
+    build: badrivishalp/xkcd_finder:latest
+    ports:
+      - "7860:7860"
+    networks:
+      - monitoring
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+  prometheus:
+    container_name: xkcd_finder_prometheus
+    image: prom/prometheus:latest
+    ports:
+      - "7863:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+  grafana:
+    container_name: xkcd_finder_grafana
+    image: grafana/grafana:latest
+    ports:
+      - "7864:3000"
+    networks:
+      - monitoring
