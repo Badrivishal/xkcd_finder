@@ -1,1 +1,4 @@
 __pycache__
+venv/
+meta.pkl
+xkcd.index

@@ -4,13 +4,19 @@ WORKDIR /app
 COPY requirements.txt ./
 RUN pip install --no-cache-dir --upgrade pip \
     && if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; else pip install --no-cache-dir gradio; fi
-COPY . .
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
     apt-get upgrade -yq ca-certificates && \
     apt-get install -yq --no-install-recommends \
     prometheus-node-exporter
+
+# Build index
+COPY build_index.py ./
+RUN python build_index.py
+
+COPY prometheus_helper.py ./
+COPY app.py ./
 
 EXPOSE 7860
 EXPOSE 8000
