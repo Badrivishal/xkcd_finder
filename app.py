@@ -120,7 +120,7 @@ EXPLANATION
 if __name__ == "__main__":
     # --- UI ---
     prometheus_helper.setup_prometheus()
-    with gr.Blocks(theme='gstaff/xkcd') as demo:
+    with gr.Blocks() as demo:
         gr.Markdown("# xkcd Comic Finder")
         gr.Markdown(
             "Sign in with your Hugging Face account so the app can call the model via the Inference API."
@@ -143,4 +143,4 @@ if __name__ == "__main__":
         global meta 
         index, meta = get_index()
         embedder = SentenceTransformer("all-MiniLM-L6-v2")
-        demo.launch()
+        demo.launch(theme='gstaff/xkcd')
