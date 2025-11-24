@@ -137,7 +137,6 @@ if __name__ == "__main__":
                 "A comic for programmers debugging code.",
                 "Life advice in comic form.",
             ],
-            type="messages",
         )
         global index
         global meta 
